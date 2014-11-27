@@ -24,6 +24,10 @@ var (
 			Usage: "SSH host address",
 		},
 		cli.StringFlag{
+			Name:  "config,c",
+			Usage: "configuration file to match hosts against (ansible config)",
+		},
+		cli.StringFlag{
 			Name:  "user,u",
 			Value: "root",
 			Usage: "user to execute the command as",
