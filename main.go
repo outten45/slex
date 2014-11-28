@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"net"
 	"os"
 	"strings"
@@ -8,6 +9,7 @@ import (
 
 	"github.com/Sirupsen/logrus"
 	"github.com/codegangsta/cli"
+	"github.com/outten45/aini"
 )
 
 var (
@@ -67,7 +69,7 @@ func multiplexAction(context *cli.Context) {
 	}
 	logger.Debug(c)
 
-	hosts := []string(context.GlobalStringSlice("host"))
+	hosts := getHosts(context)
 	if len(hosts) == 0 {
 		logger.Fatal("no host specified for command to run")
 	}
@@ -144,6 +146,31 @@ func cleanHost(host string) (string, error) {
 		port = "22"
 	}
 	return net.JoinHostPort(h, port), nil
+}
+
+//
+func getHosts(context *cli.Context) []string {
+	hosts := []string{}
+	givenHosts := []string(context.GlobalStringSlice("host"))
+
+	if c := context.GlobalString("config"); c != "" {
+		logger.Debugf("we got a config: %+v", c)
+		h, err := aini.NewFile(c)
+		if err != nil {
+			fmt.Printf("error: %+v\n", err)
+			panic(err)
+		} else {
+			for _, givenHost := range givenHosts {
+				for _, host := range h.Match(givenHost) {
+					hosts = append(hosts, host.HostPort())
+				}
+			}
+		}
+	} else {
+		hosts = givenHosts
+	}
+
+	return hosts
 }
 
 func main() {
